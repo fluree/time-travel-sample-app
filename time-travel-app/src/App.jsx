@@ -1,34 +1,90 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState, useCallback } from 'react';
 import './App.css'
+import { Table } from './table';
+import axios from 'axios';
+
+const apiKey = import.meta.env.VITE_API_KEY;
+const ledger = import.meta.env.VITE_LEDGER;
+
+function generateQueryBody(ledger) {
+  return {
+    from: ledger,
+    where: {
+      '@id': '?subject',
+      country: '?country',
+      score: '?score',
+      year: '?year'
+    },
+    select: {
+      '?subject': ['country', 'score'] 
+    },
+    'opts': {
+      orderBy: ['ASC', '?score']
+    }
+    
+  };
+}
+
+
+
+
+function issueQuery(queryBody, apiKey) {
+  return axios.post('http://localhost:58090/fluree/query', queryBody, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: apiKey,
+      'Accept': 'text/plain'
+    },
+  });
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [entities, setEntities] = useState([]);
+  const [setSelected] = useState(null);
+  const [ setIsEdit] = useState(false);
+  const [setNewEntityOpen] = useState(false);
+  const [ setFormState] = useState({
+    country: '',
+    score: '',
+  });
+  const refreshData = useCallback(
+    () =>
+      issueQuery(generateQueryBody(ledger), apiKey)
+        .then((response) => {
+          setEntities(response.data);
+          setSelected(response.data[0]);
+        })
+        .catch((error) => {
+          console.log(error);
+        }),
+    [setEntities, setSelected]
+  );
 
+  useEffect(() => {
+    if (entities.length > 0) return;
+    refreshData();
+  }, [entities, refreshData]);
+
+  const handleEdit = (entity) => {
+    setIsEdit(true);
+    setFormState(entity);
+    setNewEntityOpen(true);
+  };
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className='min-h-full'>
+        <div className='py-10'>
+          <main>
+            <Table
+               {...{
+                entities,
+                handleEdit,
+              }}
+            />
+          </main>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      </>
   )
 }
 
