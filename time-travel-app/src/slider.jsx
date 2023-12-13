@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
-
-const marks = [
+import PropTypes from 'prop-types';
+/* const marks = [
   {
     value: 0,
     label: '0°C',
@@ -18,13 +18,20 @@ const marks = [
     value: 100,
     label: '100°C',
   },
-];
+]; */
+
+DiscreteSliderMarks.propTypes = {
+    entities: PropTypes.array.isRequired,
+    handleEdit: PropTypes.func.isRequired,
+  };
 
 function valuetext(value) {
   return `${value}°C`;
 }
 
-export default function DiscreteSliderMarks() {
+export function DiscreteSliderMarks({
+    entities,
+  }) {
   return (
     <Box sx={{ width: 300 }}>
       <Slider
@@ -33,7 +40,8 @@ export default function DiscreteSliderMarks() {
         getAriaValueText={valuetext}
         step={10}
         valueLabelDisplay="auto"
-        marks={marks}
+        marks={entities.map((entity)=>
+            entity['year'])}
       />
     </Box>
   );
