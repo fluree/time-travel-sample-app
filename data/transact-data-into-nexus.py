@@ -16,7 +16,7 @@ for _, row in data_rows.iterrows():
     country = row[0]
     for i in range(1, len(row)):
         year = int(header[i])
-        score = str(row[i]) if pd.notna(row[i]) else "NaN"
+        score = int(row[i]) if pd.notna(row[i]) else "NaN"
         if year not in result:
             result[year] = []
         result[year].append({"country": country, "year": year, "score": score})
